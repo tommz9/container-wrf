@@ -45,6 +45,7 @@ RUN mkdir netcdf_links \
  && export NETCDF=/wrf/netcdf_links \
  && export JASPERINC=/usr/include/jasper/ \
  && export JASPERLIB=/usr/lib64/ \
+ && export J="-j 8" \
  && cd ./WRFV3 \
  && ./configure <<< $'34\r1\r' \
  && sed -i -e '/^DM_CC/ s/$/ -DMPI2_SUPPORT/' ./configure.wrf \
@@ -57,9 +58,43 @@ RUN cd ./WPS \
  && export NETCDF=/wrf/netcdf_links \
  && export JASPERINC=/usr/include/jasper/ \
  && export JASPERLIB=/usr/lib64/ \
+ && export J="-j 8" \
  && ./configure <<< $'1\r' \
  && sed -i -e 's/-L$(NETCDF)\/lib/-L$(NETCDF)\/lib -lnetcdff /' ./configure.wps \
  && /bin/csh ./compile
+
+#
+# WRFDA
+#
+RUN curl -SL http://www2.mmm.ucar.edu/wrf/src/WRFDA_V$WRF_VERSION.tar.gz | tar zxC /wrf
+ 
+RUN cd ./WRFDA \
+ && export NETCDF=/wrf/netcdf_links \
+ && export J="-j 8" \
+ && ./configure wrfda <<< $'32\r' \
+ && /bin/csh ./compile all_wrfvar 
+
+#
+# OBSGRID
+#
+RUN curl -SL http://www2.mmm.ucar.edu/wrf/src/OBSGRID.tar.gz | tar zxC /wrf
+
+RUN cd ./OBSGRID \
+ && export NETCDF=/wrf/netcdf_links \
+ && export J="-j 8" \
+ && ./configure <<< $'2\r' \
+ && sed -i -e 's/-lnetcdf/-lnetcdf -lnetcdff/' ./configure.oa \
+ && sed -i -e 's/\/usr\/bin\/cpp -C -P -traditional/\/usr\/bin\/cpp -P -traditional/' ./configure.oa \
+ && /bin/csh ./compile obsgrid
+ 
+#
+# Python 3.6
+#
+RUN yum -y install https://centos7.iuscommunity.org/ius-release.rpm \
+  && yum -y install python36u \
+  && yum clean all
+ 
+ 
 #
 ENV LD_LIBRARY_PATH /usr/lib64/openmpi/lib
 ENV PATH  /usr/lib64/openmpi/bin:$PATH
