@@ -2,7 +2,7 @@ FROM centos:latest
 MAINTAINER John Exby <exby@ucar.edu>
 # 
 # This Dockerfile compiles WRF from source during "docker build" step
-ENV WRF_VERSION 3.7.1
+ENV WRF_VERSION 3.9.1
 RUN curl -SL https://ral.ucar.edu/sites/default/files/public/projects/ncar-docker-wrf/ucar-bsd-3-clause-license.pdf > /UCAR-BSD-3-Clause-License.pdf
 #
 RUN yum -y update \
@@ -91,10 +91,14 @@ RUN cd ./OBSGRID \
 # Python 3.6
 #
 RUN yum -y install https://centos7.iuscommunity.org/ius-release.rpm \
-  && yum -y install python36u \
+  && yum -y install python36u python36u-pip python36u-devel \
   && yum clean all
  
- 
+
+# Python complains when the system is not UTF8
+ENV LC_ALL en_US.utf-8
+ENV LANG en_US.utf-8
+
 #
 ENV LD_LIBRARY_PATH /usr/lib64/openmpi/lib
 ENV PATH  /usr/lib64/openmpi/bin:$PATH
